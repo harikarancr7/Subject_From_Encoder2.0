@@ -313,11 +313,9 @@ SUBJECTS
 </div>
 
 <textarea id="subjects">
+Amazon's Just Extended These Memorial Day Deals
 Important Account Notification
 Live Amazon Incredible Spring Deals
-Your Prime Benefits Await
-Spring Savings End Tonight
-Limited Time Offer Available
 </textarea>
 
 <div class="label">
@@ -328,8 +326,6 @@ FROM NAMES
 Deals watchdogs
 Amazon Rewards
 Prime Alerts
-Notification Center
-Support Team
 </textarea>
 
 <button class="btn" onclick="generateAll()">
@@ -346,7 +342,7 @@ UNIQUE PAIRS
 </div>
 
 <div class="stat">
-<div class="num" id="methods">1200+</div>
+<div class="num">1200+</div>
 <div class="txt">
 ENCODING METHODS
 </div>
@@ -402,7 +398,8 @@ const charsets = [
 
 const methods = [
 'B',
-'Q'
+'Q',
+'HEXQ'
 ];
 
 const spacings = [
@@ -421,16 +418,30 @@ const folds = [
 
 const wordModes = [
 'normal',
-'split',
-'pair',
-'triple'
+'split'
 ];
 
 let allResults = [];
 
 function bytes(str){
-
   return new TextEncoder().encode(str);
+}
+
+function hexQP(str){
+
+  let out = '';
+
+  bytes(str).forEach(b=>{
+
+    out += '='
+      + b
+        .toString(16)
+        .toUpperCase()
+        .padStart(2,'0');
+
+  });
+
+  return out;
 
 }
 
@@ -482,9 +493,24 @@ function qp(str){
 
 function fold(str,size){
 
-  return str.match(
-    new RegExp('.{1,'+size+'}','g')
-  ).join('\r\n ');
+  if(
+    str.includes('=?')
+    &&
+    str.includes('?=')
+  ){
+    return str.trim();
+  }
+
+  const parts =
+    str.match(
+      new RegExp('.{1,'+size+'}','g')
+    );
+
+  if(!parts){
+    return str.trim();
+  }
+
+  return parts.join('\r\n');
 
 }
 
@@ -504,6 +530,10 @@ function buildAdvanced(
 
   let encoded = '';
 
+  // =========================
+  // BASE64
+  // =========================
+
   if(method === 'B'){
 
     if(wordMode === 'normal'){
@@ -518,6 +548,7 @@ function buildAdvanced(
       encoded =
         modified
           .split(' ')
+          .filter(Boolean)
           .map(
             w => `=?${charset}?B?${b64(w)}?=`
           )
@@ -528,42 +559,64 @@ function buildAdvanced(
     if(wordMode === 'pair'){
 
       const words =
-        modified.split(' ');
+        modified.split(' ').filter(Boolean);
 
-      encoded = '';
+      encoded =
+        words
+          .reduce((arr,_,i)=>{
 
-      for(let i=0;i<words.length;i+=2){
+            if(i % 2 === 0){
 
-        const chunk =
-          words.slice(i,i+2).join(' ');
+              arr.push(
+                words.slice(i,i+2).join(' ')
+              );
 
-        encoded +=
-          `=?${charset}?B?${b64(chunk)}?= `;
+            }
 
-      }
+            return arr;
+
+          },[])
+          .map(
+            chunk =>
+              `=?${charset}?B?${b64(chunk)}?=`
+          )
+          .join(' ');
 
     }
 
     if(wordMode === 'triple'){
 
       const words =
-        modified.split(' ');
+        modified.split(' ').filter(Boolean);
 
-      encoded = '';
+      encoded =
+        words
+          .reduce((arr,_,i)=>{
 
-      for(let i=0;i<words.length;i+=3){
+            if(i % 3 === 0){
 
-        const chunk =
-          words.slice(i,i+3).join(' ');
+              arr.push(
+                words.slice(i,i+3).join(' ')
+              );
 
-        encoded +=
-          `=?${charset}?B?${b64(chunk)}?= `;
+            }
 
-      }
+            return arr;
+
+          },[])
+          .map(
+            chunk =>
+              `=?${charset}?B?${b64(chunk)}?=`
+          )
+          .join(' ');
 
     }
 
   }
+
+  // =========================
+  // QP
+  // =========================
 
   if(method === 'Q'){
 
@@ -579,6 +632,7 @@ function buildAdvanced(
       encoded =
         modified
           .split(' ')
+          .filter(Boolean)
           .map(
             w => `=?${charset}?Q?${qp(w)}?=`
           )
@@ -589,38 +643,140 @@ function buildAdvanced(
     if(wordMode === 'pair'){
 
       const words =
-        modified.split(' ');
+        modified.split(' ').filter(Boolean);
 
-      encoded = '';
+      encoded =
+        words
+          .reduce((arr,_,i)=>{
 
-      for(let i=0;i<words.length;i+=2){
+            if(i % 2 === 0){
 
-        const chunk =
-          words.slice(i,i+2).join(' ');
+              arr.push(
+                words.slice(i,i+2).join(' ')
+              );
 
-        encoded +=
-          `=?${charset}?Q?${qp(chunk)}?= `;
+            }
 
-      }
+            return arr;
+
+          },[])
+          .map(
+            chunk =>
+              `=?${charset}?Q?${qp(chunk)}?=`
+          )
+          .join(' ');
 
     }
 
     if(wordMode === 'triple'){
 
       const words =
-        modified.split(' ');
+        modified.split(' ').filter(Boolean);
 
-      encoded = '';
+      encoded =
+        words
+          .reduce((arr,_,i)=>{
 
-      for(let i=0;i<words.length;i+=3){
+            if(i % 3 === 0){
 
-        const chunk =
-          words.slice(i,i+3).join(' ');
+              arr.push(
+                words.slice(i,i+3).join(' ')
+              );
 
-        encoded +=
-          `=?${charset}?Q?${qp(chunk)}?= `;
+            }
 
-      }
+            return arr;
+
+          },[])
+          .map(
+            chunk =>
+              `=?${charset}?Q?${qp(chunk)}?=`
+          )
+          .join(' ');
+
+    }
+
+  }
+
+  // =========================
+  // HEXQ
+  // =========================
+
+  if(method === 'HEXQ'){
+
+    if(wordMode === 'normal'){
+
+      encoded =
+        `=?${charset}?Q?${hexQP(modified)}?=`;
+
+    }
+
+    if(wordMode === 'split'){
+
+      encoded =
+        modified
+          .split(' ')
+          .filter(Boolean)
+          .map(
+            w => `=?${charset}?Q?${hexQP(w)}?=`
+          )
+          .join(' ');
+
+    }
+
+    if(wordMode === 'pair'){
+
+      const words =
+        modified.split(' ').filter(Boolean);
+
+      encoded =
+        words
+          .reduce((arr,_,i)=>{
+
+            if(i % 2 === 0){
+
+              arr.push(
+                words.slice(i,i+2).join(' ')
+              );
+
+            }
+
+            return arr;
+
+          },[])
+          .map(
+            chunk =>
+              `=?${charset}?Q?${hexQP(chunk)}?=`
+          )
+          .join(' ');
+
+    }
+
+    if(wordMode === 'triple'){
+
+      const words =
+        modified.split(' ').filter(Boolean);
+
+      encoded =
+        words
+          .reduce((arr,_,i)=>{
+
+            if(i % 3 === 0){
+
+              arr.push(
+                words.slice(i,i+3).join(' ')
+              );
+
+            }
+
+            return arr;
+
+          },[])
+          .map(
+            chunk =>
+              `=?${charset}?Q?${hexQP(chunk)}?=`
+          )
+          .join(' ');
 
     }
 
